@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1271</width>
-    <height>833</height>
+    <width>970</width>
+    <height>658</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -63,11 +63,7 @@
              </widget>
             </item>
             <item row="1" column="0" colspan="2">
-             <widget class="QChartView" name="RatingView">
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-             </widget>
+             <widget class="QCustomPlot" name="RatingViewPlot" native="true"/>
             </item>
            </layout>
           </item>
@@ -95,7 +91,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1271</width>
+     <width>970</width>
      <height>20</height>
     </rect>
    </property>
@@ -104,9 +100,10 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QChartView</class>
-   <extends>QGraphicsView</extends>
-   <header location="global">qchartview.h</header>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header location="global">qcustomplot.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

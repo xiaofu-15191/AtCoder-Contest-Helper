@@ -12,6 +12,8 @@ find_package(Qt${QT_VERSION_MAJOR}
         Core
         Gui
         Widgets
+        Network
+        PrintSupport
 )
 qt_standard_project_setup()
 
@@ -20,6 +22,8 @@ set(PROJECT_SOURCES
     MainWindow.ui
     MainWindow.h
     MainWindow.cpp
+    qcustomplot.h
+    qcustomplot.cpp
 )
 
 qt_add_executable(AtCoder-Contest-Helper ${PROJECT_SOURCES})
@@ -36,4 +40,4 @@ target_link_libraries(AtCoder-Contest-Helper
         Qt::Widgets
 )
 find_package(Qt6 REQUIRED COMPONENTS Network Charts) 
-target_link_libraries(AtCoder-Contest-Helper PRIVATE Qt6::Network Qt6::Charts)
+target_link_libraries(AtCoder-Contest-Helper PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt6::Network Qt6::PrintSupport)
