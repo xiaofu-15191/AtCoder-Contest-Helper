@@ -1,12 +1,6 @@
 <RCC>
     <qresource prefix="/pics">
         <file>icons/go.png</file>
-        <file>icons/pic-for-blue.png</file>
-        <file>icons/pic-for-brown.png</file>
-        <file>icons/pic-for-cyan.png</file>
-        <file>icons/pic-for-green.png</file>
-        <file>icons/pic-for-grey.png</file>
-        <file>icons/pic-for-orange.png</file>
-        <file>icons/pic-for-yellow.png</file>
+        <file>icons/At-Default-Avatar.png</file>
     </qresource>
 </RCC>

@@ -1,44 +1,63 @@
 ﻿#include "MainWindow.h"
 MainWindow::MainWindow(QWidget *parent):QMainWindow(parent)
 {
-    ui.setupUi(this);
+	ui.setupUi(this);
 	QApplication::instance()->installEventFilter(this);
-    connect(ui.UserNameSearch,&QPushButton::pressed,this,&MainWindow::GetUsername);
+	QPixmapCache::setCacheLimit(1);
+	connect(ui.UserNameSearch,&QPushButton::pressed,this,&MainWindow::GetUsername);
 	connect(ui.UserNameEdit,&QLineEdit::editingFinished,this,&MainWindow::GetUsername);
-    Manager=new QNetworkAccessManager();
+	Manager=new QNetworkAccessManager();
 	RatingDisplayLabel=new QLabel(this);
-	/*RatingX=new QValueAxis;
-	RatingY=new QValueAxis;
-	RatingChart=new QChart;
-	RatingChart->setTitle("Rating");
-	ui.RatingView->setChart(RatingChart);
-	ui.RatingView->setRenderHint(QPainter::Antialiasing);
-	RatingLineSeries=new QLineSeries;
-	RatingPointSeries=new QScatterSeries;*/
-	//connect(RatingPointSeries,&QScatterSeries::hovered,this,&MainWindow::RatingHistoryPointDisplay);
 	setAutoFillBackground(true);
 	RatingGraph=ui.RatingViewPlot->addGraph();
 	ui.RatingViewPlot->legend->setVisible(false);
-	//ui.RatingViewPlot->hide();
+	ui.RatingViewPlot->xAxis->setVisible(false);
+	ui.RatingViewPlot->yAxis->setVisible(false);
+	ui.NowRatingLabel->setFont(QFont("Lato",10));
+	ui.MaxmiumRatingLabel->setFont(QFont("Lato",10));
+	ui.RatedMatchesLabel->setFont(QFont("Lato",10));
+	ui.RankingLabel->setFont(QFont("Lato",10));
+	ui.UserNameEdit->setFont(QFont("Lato",10));
+	QToolTip::setFont(QFont("Lato",9));
+	ColorPreset();
+	ui.SideBar->setCurrentRow(0);
+	Painter=new QPainter(this);
 }
 MainWindow::~MainWindow()
 {
 }
+void MainWindow::ColorPreset()
+{
+	QLinearGradient plotGradient;
+	plotGradient.setColorAt(0,QColor(255,255,255,0));
+	ui.RatingViewPlot->setBackground(plotGradient);
+	if(QApplication::palette().color(QPalette::Window).lightness()<128)
+	{
+		ui.SideBar->setStyleSheet(DarkStyleSheet);
+		ui.RatingViewPlot->yAxis->setTickLabelColor(QColor(235,238,245));
+	}
+	else
+	{
+		ui.SideBar->setStyleSheet(LightStyleSheet);
+		ui.RatingViewPlot->yAxis->setTickLabelColor(QColor(40,44,52));
+	}
+}
 void MainWindow::GetUserInformation()
 {
-	Request=QNetworkRequest(QUrl("https://atcoder.jp/users/"+UserName));
-	Reply=Manager->get(Request);
-	connect(Reply,&QNetworkReply::readyRead,this,&MainWindow::GetRating);
-	connect(Reply,&QNetworkReply::finished,[&]{Reply->deleteLater();});
+	Request=QNetworkRequest(QUrl("https://atcoder.jp/users/"+UserName+"?graph=rating"));
+	UserInformationReply=Manager->get(Request);
+	connect(UserInformationReply,&QNetworkReply::readyRead,this,&MainWindow::GetRating);
+	connect(UserInformationReply,&QNetworkReply::finished,[&]{UserInformationReply->deleteLater();});
 }
 void MainWindow::GetRating()
 {
 	ui.RatingViewPlot->hide();
-	Data=Reply->readAll();
+	Data=UserInformationReply->readAll();
+	if(int(Data.indexOf("<title>404 Not Found - AtCoder</title>"))!=-1) return;
 	qsizetype st=Data.indexOf("<script>var rating_history="),en=Data.indexOf("];</script>");
 	st+=27;
-	QByteArray RatingHistory_Origin=Data.mid(st,en-st+1);
-	JsonDocument=QJsonDocument::fromJson(RatingHistory_Origin);
+	QByteArray RatingHistoryOrigin=Data.mid(st,en-st+1);
+	JsonDocument=QJsonDocument::fromJson(RatingHistoryOrigin);
 	JsonArray=JsonDocument.array();
 	Contests.clear();
 	ContestsHistoryID.clear();
@@ -53,20 +72,14 @@ void MainWindow::GetRating()
 		int TempRating=JsonDocument[i]["NewRating"].toInt();
 		Contests.push_back(ContestName);
 		MaxRating=std::max(MaxRating,TempRating);
-		/*ContestRatingPoints.push_back(QPoint(i+1,TempRating));*/
 		ContestsHistoryID.push_back(i+1);
 		ContestsHistoryRating.push_back(TempRating);
 		NowRating=TempRating;
 	}
 	RatingGraph->setData(ContestsHistoryID,ContestsHistoryRating);
-	/*RatingLineSeries->replace(ContestRatingPoints);
-	RatingPointSeries->replace(ContestRatingPoints);
-	RatingX->setRange(0,JsonArray.size()+1);
-	RatingX->setTitleText("Contest");
-	RatingX->setTickCount(JsonArray.size()+2);
-	RatingX->setLabelFormat("%d");*/
 	int RatingLimitNumNow=std::upper_bound(RatingNum,RatingNum+11,NowRating)-RatingNum,RatingLimitNumMax=std::upper_bound(RatingNum,RatingNum+11,MaxRating)-RatingNum;
-	RatingGraph->setPen(QPen(QColor(0,0,0)));
+	GottenRating=1;
+	RatingGraph->setPen(QPen(QColor(20,20,20)));
 	RatingGraph->setLineStyle(QCPGraph::lsLine);
 	RatingGraph->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc,10));
 	ui.RatingViewPlot->yAxis->setRange(0,RatingNum[RatingLimitNumMax]);
@@ -78,13 +91,36 @@ void MainWindow::GetRating()
 	ui.RatingViewPlot->xAxis->setTicker(TickerX);
 	ui.RatingViewPlot->yAxis->setSubTickLength(0,0);
 	ui.RatingViewPlot->xAxis->setSubTickLength(0,0);
-	ui.RatingViewPlot->xAxis->setVisible(false);
-	ui.RatingViewPlot->setBackground(QPixmap(":/pics/icons/pic-for-yellow.png"));
-	QLinearGradient plotGradient;
-	plotGradient.setColorAt(0,QColor(255,255,255,0));
-	ui.RatingViewPlot->setBackground(plotGradient);
+	ui.RatingViewPlot->yAxis->setVisible(true);
 	ui.RatingViewPlot->replot();
 	ui.RatingViewPlot->show();
+	qDebug()<<Data;
+	ui.NowRatingLabel->setText(QString::asprintf("Rating    %d",NowRating));
+	ui.MaxmiumRatingLabel->setText(QString::asprintf("Highest Rating    %d",MaxRating));
+	ui.RatedMatchesLabel->setText(QString::asprintf("Rated Matches    %d",JsonArray.size()));
+	st=Data.indexOf("<tr><th class=\"no-break\">Rank</th><td>"),en=Data.mid(st,75).indexOf("</td></tr>")+st;
+	QByteArray RankOrigin;
+	if(st<0||en<0)
+	{
+		RankOrigin=" Uh,We can't get it through the website:(";
+		ui.RankingLabel->setWordWrap(true);
+	}
+	else
+	{
+		st+=38;
+		RankOrigin=Data.mid(st,en-st);
+	}
+	ui.RankingLabel->setText(QString("Rank "+RankOrigin));
+	st=Data.indexOf("<img class='avatar' src='"),en=Data.mid(st,200).indexOf("width='128' height='128'")+st;
+	st+=25;
+	QByteArray AvatarOrigin=Data.mid(st,en-st-2);
+	if(AvatarOrigin=="//img.atcoder.jp/assets/icon/avatar.png") AvatarOrigin="https://img.atcoder.jp/assets/icon/avatar.png";
+	if(AvatarOrigin.size()>100) AvatarOrigin.clear();
+	else
+	{
+		AvatarReply=Manager->get(QNetworkRequest(QUrl(AvatarOrigin)));
+		connect(AvatarReply,&QNetworkReply::readyRead,this,&MainWindow::AvatarDisplay);
+	}
 }
 void MainWindow::GetUsername()
 {
@@ -97,10 +133,6 @@ void MainWindow::RatingHistoryPointDisplay(QMouseEvent * event)
 	double MouseY=ui.RatingViewPlot->yAxis->pixelToCoord(event->pos().y());
 	if(MouseX<ui.RatingViewPlot->xAxis->range().lower||MouseX>ui.RatingViewPlot->xAxis->range().upper||MouseY<ui.RatingViewPlot->yAxis->range().lower||MouseY>ui.RatingViewPlot->yAxis->range().upper) return;
 	if(ContestsHistoryRating.empty()) return;
-	/*auto it=std::lower_bound(ContestsHistoryRating.begin(),ContestsHistoryRating.end(),MouseY);
-	int where=it-ContestsHistoryRating.begin();
-	int TargetX=ContestsHistoryID.at(where);
-	double TargetY=0;*/
 	double RatioX=ui.RatingViewPlot->xAxis->axisRect()->width()/(ui.RatingViewPlot->xAxis->range().upper-ui.RatingViewPlot->xAxis->range().lower);
 	double RatioY=ui.RatingViewPlot->yAxis->axisRect()->height()/(ui.RatingViewPlot->yAxis->range().upper-ui.RatingViewPlot->yAxis->range().lower);
 	int get=0,TargetX=0;
@@ -120,56 +152,74 @@ void MainWindow::RatingHistoryPointDisplay(QMouseEvent * event)
 	if(get==-1) return;
 	if(tmp<15)
 	{
-		QString StrTip=QString("Rating:"+QString::asprintf("%d",(int)TargetY));
+		QString StrTip=QString(Contests[(int)(TargetX-1)]+" Rating:"+QString::asprintf("%d",(int)TargetY));
 		int tmp=std::upper_bound(RatingNum,RatingNum+11,(int)TargetY)-RatingNum;
-		switch(RatingNum[tmp])
-		{
-			case 400:
-			{
-				this->setStyleSheet("QToolTip{background-color:rgb(128,128,128)}");
-				break;
-			}
-			case 800:
-			{
-				this->setStyleSheet("QToolTip{background-color:rgb(128,64,0)}");
-				break;
-			}
-			case 1200:
-			{
-				this->setStyleSheet("QToolTip{background-color:rgb(0,128,0)}");
-				break;
-			}
-			case 1600:
-			{
-				this->setStyleSheet("QToolTip{background-color:rgb(0,192,192)}");
-				break;
-			}
-			case 2000:
-			{
-				this->setStyleSheet("QToolTip{background-color:rgb(0,0,255)}");
-				break;
-			}
-			case 2400:
-			{
-				this->setStyleSheet("QToolTip{background-color:rgb(192,192,0)}");
-				break;
-			}
-			case 2800:
-			{
-				this->setStyleSheet("QToolTip{background-color:rgb(255,128,0)}");
-				break;
-			}
-			default:
-			{
-				this->setStyleSheet("QToolTip{background-color:rgb(255,0,0)}");
-				break;
-			}
-		}
+		this->setStyleSheet(RatingNumColorStyleSheet[std::min(7,tmp-1)]);
 		QToolTip::showText(event->globalPos(),StrTip,ui.RatingViewPlot);
 	}
 	else
 		if(QToolTip::isVisible())
 			QToolTip::hideText();
+}
+void MainWindow::AvatarDisplay()
+{
+	QPixmapCache::clear();
+	Data=AvatarReply->readAll();
+	QPixmap AvatarPixmap;
+	QImage AvatarImage;
+	AvatarImage.loadFromData(Data);
+	AvatarPixmap.convertFromImage(AvatarImage);
+	int ScaleHeight=ui.AvatarLabel->height();
+	int ScaleWidth=std::max(100,AvatarPixmap.scaledToHeight(ScaleHeight).width());
+	if(ScaleWidth>ui.AvatarLabel->width())
+	{
+		ScaleWidth=ui.AvatarLabel->width();
+		ScaleHeight=AvatarPixmap.scaledToWidth(ScaleWidth).height();
+	}
+	AvatarPixmap=AvatarPixmap.scaled(ScaleWidth,ScaleHeight,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+	if(AvatarPixmap.size().width()<5&&AvatarPixmap.size().height()<5)
+	{
+		QPixmapCache::clear();
+		AvatarPixmap.convertFromImage(QImage(":/pics/icons/At-Default-Avatar.png"));
+		ScaleHeight=ui.AvatarLabel->height();
+		ScaleWidth=AvatarPixmap.scaledToHeight(ScaleHeight).width();
+		if(ScaleWidth>ui.AvatarLabel->width())
+		{
+			ScaleWidth=ui.AvatarLabel->width();
+			ScaleHeight=AvatarPixmap.scaledToWidth(ScaleWidth).height();
+		}
+		AvatarPixmap=AvatarPixmap.scaled(ScaleWidth,ScaleHeight,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+		ui.AvatarLabel->setPixmap(AvatarPixmap);
+		return;
+	}
+	ui.AvatarLabel->setPixmap(AvatarPixmap);
+	ui.AvatarLabel->show();
+}
+void MainWindow::paintEvent(QPaintEvent * event)
+{
+	if(GottenRating==0) return;
+	Painter->begin(this);
+	int end_at=(MaxRating)/400;
+	double PlotWidth=ui.RatingViewPlot->width()-60;
+	double PlotHeight=ui.RatingViewPlot->height()-32;
+	QPolygonF RatingBackRect;
+	for(int i=0;i<=end_at;i++)
+	{
+		Painter->setPen(QPen(RatingBackGroundColor[i]));
+		Painter->setRenderHint(QPainter::Antialiasing,true);
+		QPointF TmpPoint=QPointF(175,63);
+		RatingBackRect.clear();
+		RatingBackRect.append(QPointF(TmpPoint.x(),TmpPoint.y()));
+		RatingBackRect.append(QPointF(TmpPoint.x(),TmpPoint.y()+PlotHeight-PlotHeight/(end_at+1)*i));
+		RatingBackRect.append(QPointF(TmpPoint.x()+PlotWidth,TmpPoint.y()+PlotHeight-PlotHeight/(end_at+1)*i));
+		RatingBackRect.append(QPointF(TmpPoint.x()+PlotWidth,TmpPoint.y()));
+		QBrush Filler;
+		Filler.setColor(QColor(RatingBackGroundColor[i]));
+		Filler.setStyle(Qt::SolidPattern);
+		Painter->setBrush(Filler);
+		Painter->drawPolygon(RatingBackRect);
+	}
+	Painter->end();
 }
 bool MainWindow::eventFilter(QObject * watched,QEvent * event)
 {
@@ -183,63 +233,3 @@ bool MainWindow::eventFilter(QObject * watched,QEvent * event)
 	}
 	return QObject::eventFilter(watched,event);
 }
-/*void MainWindow::RatingHistoryPointDisplay(const QPointF &point,bool state)
-{
-	if(state)
-	{
-		int tmp=std::upper_bound(RatingNum,RatingNum+8,(int)(point.y()))-RatingNum;
-		RatingDisplayLabel->setText((QString(Contests[(int)(point.x())-1])+" Rating:"+QString::asprintf("%d",(int)(point.y()))));
-		QPoint CurrentPos=mapFromGlobal(QCursor::pos());
-		RatingDisplayLabel->move(CurrentPos.x()-RatingDisplayLabel->width()/2,CurrentPos.y()-RatingDisplayLabel->height()*1.5);
-		RatingDisplayLabel->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-		RatingDisplayLabel->setMinimumHeight(60);
-		RatingDisplayLabel->setAlignment(AlignCenter);
-		RatingDisplayLabel->setWordWrap(true);
-		switch(RatingNum[tmp])
-		{
-			case 400:
-			{
-				RatingDisplayLabel->setStyleSheet("border-radius: 6px;background-color:rgb(128,128,128)");
-				break;
-			}
-			case 800:
-			{
-				RatingDisplayLabel->setStyleSheet("border-radius: 6px;background-color:rgb(128,64,0)");
-				break;
-			}
-			case 1200:
-			{
-				RatingDisplayLabel->setStyleSheet("border-radius: 6px;background-color:rgb(0,128,0)");
-				break;
-			}
-			case 1600:
-			{
-				RatingDisplayLabel->setStyleSheet("border-radius: 6px;background-color:rgb(0,192,192)");
-				break;
-			}
-			case 2000:
-			{
-				RatingDisplayLabel->setStyleSheet("border-radius: 6px;background-color:rgb(0,0,255)");
-				break;
-			}
-			case 2400:
-			{
-				RatingDisplayLabel->setStyleSheet("border-radius: 6px;background-color:rgb(192,192,0)");
-				break;
-			}
-			case 2800:
-			{
-				RatingDisplayLabel->setStyleSheet("border-radius: 6px;background-color:rgb(255,128,0)");
-				break;
-			}
-			default:
-			{
-				RatingDisplayLabel->setStyleSheet("border-radius: 6px;background-color:rgb(255,0,0)");
-				break;
-			}
-		}
-		RatingDisplayLabel->show();
-	}
-	else
-		RatingDisplayLabel->hide();
-}*/

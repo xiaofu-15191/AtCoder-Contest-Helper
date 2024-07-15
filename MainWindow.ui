@@ -1,103 +1,276 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindowClass</class>
- <widget class="QMainWindow" name="MainWindowClass">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>970</width>
-    <height>658</height>
+    <width>990</width>
+    <height>675</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>MainWindow</string>
+  <property name="minimumSize">
+   <size>
+    <width>990</width>
+    <height>675</height>
+   </size>
   </property>
-  <widget class="QWidget" name="centralWidget">
+  <property name="windowTitle">
+   <string>AtCoder-Contest-Helper</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
-     <layout class="QGridLayout" name="MainWindowLayout">
+     <layout class="QGridLayout" name="MainLayout">
       <item row="0" column="0">
-       <widget class="QTabWidget" name="tabWidget">
+       <widget class="QListWidget" name="SideBar">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>1</width>
+          <height>1</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>110</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QWidget:focus{
+outline: none;
+}
+QListWidget {
+	border: 0;
+}
+QListView::item {
+    height: 50px;
+	border-radius: 5px;
+}
+ QListView::Item:hover {
+ background: rgb(80, 80, 80);
+ }
+ 
+QListView::Item:selected  {
+	background: rgb(63, 63, 63);
+}</string>
+        </property>
+        <item>
+         <property name="text">
+          <string>用户</string>
+         </property>
+         <property name="icon">
+          <iconset theme="system-help"/>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>比赛列表</string>
+         </property>
+         <property name="icon">
+          <iconset theme="user-home"/>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>当前比赛</string>
+         </property>
+         <property name="icon">
+          <iconset theme="input-keyboard"/>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QStackedWidget" name="stackedWidget">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>3</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="sizeIncrement">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QStackedWidget:{
+QFrame{border:none;};
+}</string>
+        </property>
         <property name="currentIndex">
          <number>0</number>
         </property>
         <widget class="QWidget" name="UserWidget">
-         <attribute name="title">
-          <string>用户</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_3">
-          <item row="0" column="0">
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="1" column="0">
            <layout class="QGridLayout" name="UserLayout">
+            <item row="4" column="1" colspan="2">
+             <widget class="QLabel" name="MaxmiumRatingLabel">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="0">
              <widget class="QLineEdit" name="UserNameEdit">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1" colspan="2">
+             <widget class="QLabel" name="NowRatingLabel">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" rowspan="6">
+             <widget class="QCustomPlot" name="RatingViewPlot" native="true"/>
+            </item>
+            <item row="5" column="1" colspan="2">
+             <widget class="QLabel" name="RankingLabel">
+              <property name="maximumSize">
+               <size>
+                <width>110</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1" colspan="2">
+             <widget class="QLabel" name="RatedMatchesLabel">
+              <property name="text">
+               <string/>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="2">
              <widget class="QPushButton" name="UserNameSearch">
+              <property name="text">
+               <string>搜索</string>
+              </property>
+              <property name="icon">
+               <iconset theme="document-send"/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1" colspan="2">
+             <widget class="QLabel" name="AvatarLabel">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="text">
-               <string>搜索</string>
-              </property>
-              <property name="icon">
-               <iconset resource="MainWindow.qrc">
-                <normaloff>:/icons/icons/go.png</normaloff>:/icons/icons/go.png</iconset>
-              </property>
-              <property name="iconSize">
+              <property name="minimumSize">
                <size>
-                <width>20</width>
-                <height>20</height>
+                <width>100</width>
+                <height>100</height>
                </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>100</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>1</pointsize>
+                <kerning>false</kerning>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">image: url(:/pics/icons/At-Default-Avatar.png);</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
-            <item row="1" column="0" colspan="2">
-             <widget class="QCustomPlot" name="RatingViewPlot" native="true"/>
+            <item row="2" column="1" colspan="2">
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Orientation::Vertical</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>150</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="ContestListWidget">
-         <attribute name="title">
-          <string>比赛列表</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_4">
-          <item row="0" column="0">
-           <layout class="QGridLayout" name="ContestListLayout"/>
-          </item>
-         </layout>
-        </widget>
+        <widget class="QWidget" name="ContestListWidget"/>
+        <widget class="QWidget" name="CurrentContestWidget"/>
        </widget>
       </item>
      </layout>
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
-  <widget class="QMenuBar" name="menuBar">
+  <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>970</width>
-     <height>20</height>
+     <width>990</width>
+     <height>33</height>
     </rect>
    </property>
   </widget>
+  <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
    <class>QCustomPlot</class>
@@ -109,5 +282,22 @@
  <resources>
   <include location="MainWindow.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>SideBar</sender>
+   <signal>currentRowChanged(int)</signal>
+   <receiver>stackedWidget</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>94</x>
+     <y>248</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>235</x>
+     <y>260</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

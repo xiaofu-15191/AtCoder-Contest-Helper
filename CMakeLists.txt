@@ -22,6 +22,7 @@ set(PROJECT_SOURCES
     MainWindow.ui
     MainWindow.h
     MainWindow.cpp
+    MainWindow.qrc
     qcustomplot.h
     qcustomplot.cpp
 )
