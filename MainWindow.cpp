@@ -13,11 +13,15 @@ MainWindow::MainWindow(QWidget *parent):QMainWindow(parent)
 	ui.RatingViewPlot->legend->setVisible(false);
 	ui.RatingViewPlot->xAxis->setVisible(false);
 	ui.RatingViewPlot->yAxis->setVisible(false);
-	ui.NowRatingLabel->setFont(QFont("Lato",10));
-	ui.MaxmiumRatingLabel->setFont(QFont("Lato",10));
-	ui.RatedMatchesLabel->setFont(QFont("Lato",10));
-	ui.RankingLabel->setFont(QFont("Lato",10));
+	ui.NowRatingLabel1->setFont(QFont("Lato",10));
+	ui.MaxmiumRatingLabel1->setFont(QFont("Lato",10));
+	ui.RatedMatchesLabel1->setFont(QFont("Lato",10));
+	ui.RankingLabel1->setFont(QFont("Lato",10));
 	ui.UserNameEdit->setFont(QFont("Lato",10));
+	ui.NowRatingLabel2->setFont(QFont("Lato",10));
+	ui.MaxmiumRatingLabel2->setFont(QFont("Lato",10));
+	ui.RatedMatchesLabel2->setFont(QFont("Lato",10));
+	ui.RankingLabel2->setFont(QFont("Lato",10));
 	QToolTip::setFont(QFont("Lato",9));
 	ColorPreset();
 	ui.SideBar->setCurrentRow(0);
@@ -95,22 +99,22 @@ void MainWindow::GetRating()
 	ui.RatingViewPlot->replot();
 	ui.RatingViewPlot->show();
 	qDebug()<<Data;
-	ui.NowRatingLabel->setText(QString::asprintf("Rating    %d",NowRating));
-	ui.MaxmiumRatingLabel->setText(QString::asprintf("Highest Rating    %d",MaxRating));
-	ui.RatedMatchesLabel->setText(QString::asprintf("Rated Matches    %d",JsonArray.size()));
+	ui.NowRatingLabel2->setText(QString::asprintf("%d",NowRating));
+	ui.MaxmiumRatingLabel2->setText(QString::asprintf("%d",MaxRating));
+	ui.RatedMatchesLabel2->setText(QString::asprintf("%d",JsonArray.size()));
 	st=Data.indexOf("<tr><th class=\"no-break\">Rank</th><td>"),en=Data.mid(st,75).indexOf("</td></tr>")+st;
 	QByteArray RankOrigin;
 	if(st<0||en<0)
 	{
-		RankOrigin=" Uh,We can't get it through the website:(";
-		ui.RankingLabel->setWordWrap(true);
+		RankOrigin=" -";
+		ui.RankingLabel2->setWordWrap(true);
 	}
 	else
 	{
 		st+=38;
 		RankOrigin=Data.mid(st,en-st);
 	}
-	ui.RankingLabel->setText(QString("Rank "+RankOrigin));
+	ui.RankingLabel2->setText(QString(""+RankOrigin));
 	st=Data.indexOf("<img class='avatar' src='"),en=Data.mid(st,200).indexOf("width='128' height='128'")+st;
 	st+=25;
 	QByteArray AvatarOrigin=Data.mid(st,en-st-2);
