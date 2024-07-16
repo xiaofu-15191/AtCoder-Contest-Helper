@@ -199,25 +199,32 @@ void MainWindow::paintEvent(QPaintEvent * event)
 {
 	if(GottenRating==0) return;
 	Painter->begin(this);
-	int end_at=(MaxRating)/400;
 	double PlotWidth=ui.RatingViewPlot->width()-60;
 	double PlotHeight=ui.RatingViewPlot->height()-32;
-	QPolygonF RatingBackRect;
-	for(int i=0;i<=end_at;i++)
+	if(ui.SideBar->currentRow()==0)
 	{
-		Painter->setPen(QPen(RatingBackGroundColor[i]));
-		Painter->setRenderHint(QPainter::Antialiasing,true);
-		QPointF TmpPoint=QPointF(175,63);
-		RatingBackRect.clear();
-		RatingBackRect.append(QPointF(TmpPoint.x(),TmpPoint.y()));
-		RatingBackRect.append(QPointF(TmpPoint.x(),TmpPoint.y()+PlotHeight-PlotHeight/(end_at+1)*i));
-		RatingBackRect.append(QPointF(TmpPoint.x()+PlotWidth,TmpPoint.y()+PlotHeight-PlotHeight/(end_at+1)*i));
-		RatingBackRect.append(QPointF(TmpPoint.x()+PlotWidth,TmpPoint.y()));
-		QBrush Filler;
-		Filler.setColor(QColor(RatingBackGroundColor[i]));
-		Filler.setStyle(Qt::SolidPattern);
-		Painter->setBrush(Filler);
-		Painter->drawPolygon(RatingBackRect);
+		int end_at=(MaxRating)/400;
+		QPolygonF RatingBackRect;
+		for(int i=0;i<=end_at;i++)
+		{
+			Painter->setPen(QPen(RatingBackGroundColor[i]));
+			Painter->setRenderHint(QPainter::Antialiasing,true);
+			QPointF TmpPoint=QPointF(175,63);
+			RatingBackRect.clear();
+			RatingBackRect.append(QPointF(TmpPoint.x(),TmpPoint.y()));
+			RatingBackRect.append(QPointF(TmpPoint.x(),TmpPoint.y()+PlotHeight-PlotHeight/(end_at+1)*i));
+			RatingBackRect.append(QPointF(TmpPoint.x()+PlotWidth,TmpPoint.y()+PlotHeight-PlotHeight/(end_at+1)*i));
+			RatingBackRect.append(QPointF(TmpPoint.x()+PlotWidth,TmpPoint.y()));
+			QBrush Filler;
+			Filler.setColor(QColor(RatingBackGroundColor[i]));
+			Filler.setStyle(Qt::SolidPattern);
+			Painter->setBrush(Filler);
+			Painter->drawPolygon(RatingBackRect);
+		}
+	}
+	else
+	{
+		Painter->eraseRect(175,63,175+width(),63+height());
 	}
 	Painter->end();
 }
