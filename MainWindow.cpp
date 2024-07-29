@@ -13,15 +13,16 @@ MainWindow::MainWindow(QWidget *parent):QMainWindow(parent)
 	ui.RatingViewPlot->legend->setVisible(false);
 	ui.RatingViewPlot->xAxis->setVisible(false);
 	ui.RatingViewPlot->yAxis->setVisible(false);
-	ui.NowRatingLabel1->setFont(QFont("Lato",10));
-	ui.MaxmiumRatingLabel1->setFont(QFont("Lato",10));
-	ui.RatedMatchesLabel1->setFont(QFont("Lato",10));
-	ui.RankingLabel1->setFont(QFont("Lato",10));
-	ui.UserNameEdit->setFont(QFont("Lato",10));
-	ui.NowRatingLabel2->setFont(QFont("Lato",10));
-	ui.MaxmiumRatingLabel2->setFont(QFont("Lato",10));
-	ui.RatedMatchesLabel2->setFont(QFont("Lato",10));
-	ui.RankingLabel2->setFont(QFont("Lato",10));
+	ui.NowRatingLabel1->setFont(QFont("Lato",10,600));
+	ui.MaxmiumRatingLabel1->setFont(QFont("Lato",10,600));
+	ui.RatedMatchesLabel1->setFont(QFont("Lato",10,600));
+	ui.RankingLabel1->setFont(QFont("Lato",10,600));
+	ui.UserNameEdit->setFont(QFont("Lato",10,600));
+	ui.NowRatingLabel2->setFont(QFont("Lato",10,600));
+	ui.MaxmiumRatingLabel2->setFont(QFont("Lato",10,600));
+	ui.RatedMatchesLabel2->setFont(QFont("Lato",10,600));
+	ui.RankingLabel2->setFont(QFont("Lato",10,600));
+	ui.UserNameLabel->setFont(QFont("Lato",20,QFont::Bold));
 	QToolTip::setFont(QFont("Lato",9));
 	ColorPreset();
 	ui.SideBar->setCurrentRow(0);
@@ -48,8 +49,7 @@ void MainWindow::ColorPreset()
 }
 void MainWindow::GetUserInformation()
 {
-	Request=QNetworkRequest(QUrl("https://atcoder.jp/users/"+UserName+"?graph=rating"));
-	UserInformationReply=Manager->get(Request);
+	UserInformationReply=Manager->get(QNetworkRequest(QUrl("https://atcoder.jp/users/"+UserName+"?graph=rating")));
 	connect(UserInformationReply,&QNetworkReply::readyRead,this,&MainWindow::GetRating);
 	connect(UserInformationReply,&QNetworkReply::finished,[&]{UserInformationReply->deleteLater();});
 }
@@ -57,7 +57,11 @@ void MainWindow::GetRating()
 {
 	ui.RatingViewPlot->hide();
 	Data=UserInformationReply->readAll();
-	if(int(Data.indexOf("<title>404 Not Found - AtCoder</title>"))!=-1) return;
+	if(int(Data.indexOf("<title>404 Not Found - AtCoder</title>"))!=-1)
+	{
+		ui.statusbar->showMessage("用户不存在。",1500);
+		return;
+	}
 	qsizetype st=Data.indexOf("<script>var rating_history="),en=Data.indexOf("];</script>");
 	st+=27;
 	QByteArray RatingHistoryOrigin=Data.mid(st,en-st+1);
@@ -98,9 +102,10 @@ void MainWindow::GetRating()
 	ui.RatingViewPlot->yAxis->setVisible(true);
 	ui.RatingViewPlot->replot();
 	ui.RatingViewPlot->show();
-	qDebug()<<Data;
 	ui.NowRatingLabel2->setText(QString::asprintf("%d",NowRating));
+	ui.NowRatingLabel2->setStyleSheet(RatingLabelColorStyleSheet[std::min(8,RatingLimitNumNow)]);
 	ui.MaxmiumRatingLabel2->setText(QString::asprintf("%d",MaxRating));
+	ui.MaxmiumRatingLabel2->setStyleSheet(RatingLabelColorStyleSheet[std::min(8,RatingLimitNumMax)]);
 	ui.RatedMatchesLabel2->setText(QString::asprintf("%d",JsonArray.size()));
 	st=Data.indexOf("<tr><th class=\"no-break\">Rank</th><td>"),en=Data.mid(st,75).indexOf("</td></tr>")+st;
 	QByteArray RankOrigin;
@@ -117,18 +122,14 @@ void MainWindow::GetRating()
 	ui.RankingLabel2->setText(QString(""+RankOrigin));
 	st=Data.indexOf("<img class='avatar' src='"),en=Data.mid(st,200).indexOf("width='128' height='128'")+st;
 	st+=25;
-	QByteArray AvatarOrigin=Data.mid(st,en-st-2);
-	if(AvatarOrigin=="//img.atcoder.jp/assets/icon/avatar.png") AvatarOrigin="https://img.atcoder.jp/assets/icon/avatar.png";
-	if(AvatarOrigin.size()>100) AvatarOrigin.clear();
-	else
-	{
-		AvatarReply=Manager->get(QNetworkRequest(QUrl(AvatarOrigin)));
-		connect(AvatarReply,&QNetworkReply::readyRead,this,&MainWindow::AvatarDisplay);
-	}
+	ui.UserNameLabel->setText(UserName);
+	ui.UserNameLabel->setStyleSheet(RatingLabelColorStyleSheet[std::min(8,RatingLimitNumNow)]);
+	ui.statusbar->showMessage("加载完毕。",1000);
 }
 void MainWindow::GetUsername()
 {
 	UserName=ui.UserNameEdit->text();
+	ui.statusbar->showMessage("加载用户信息中...");
 	GetUserInformation();
 }
 void MainWindow::RatingHistoryPointDisplay(QMouseEvent * event)
@@ -158,46 +159,12 @@ void MainWindow::RatingHistoryPointDisplay(QMouseEvent * event)
 	{
 		QString StrTip=QString(Contests[(int)(TargetX-1)]+" Rating:"+QString::asprintf("%d",(int)TargetY));
 		int tmp=std::upper_bound(RatingNum,RatingNum+11,(int)TargetY)-RatingNum;
-		this->setStyleSheet(RatingNumColorStyleSheet[std::min(7,tmp-1)]);
+		this->setStyleSheet(RatingTipColorStyleSheet[std::min(7,tmp-1)]);
 		QToolTip::showText(event->globalPos(),StrTip,ui.RatingViewPlot);
 	}
 	else
 		if(QToolTip::isVisible())
 			QToolTip::hideText();
-}
-void MainWindow::AvatarDisplay()
-{
-	QPixmapCache::clear();
-	Data=AvatarReply->readAll();
-	QPixmap AvatarPixmap;
-	QImage AvatarImage;
-	AvatarImage.loadFromData(Data);
-	AvatarPixmap.convertFromImage(AvatarImage);
-	int ScaleHeight=ui.AvatarLabel->height();
-	int ScaleWidth=std::max(100,AvatarPixmap.scaledToHeight(ScaleHeight).width());
-	if(ScaleWidth>ui.AvatarLabel->width())
-	{
-		ScaleWidth=ui.AvatarLabel->width();
-		ScaleHeight=AvatarPixmap.scaledToWidth(ScaleWidth).height();
-	}
-	AvatarPixmap=AvatarPixmap.scaled(ScaleWidth,ScaleHeight,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-	if(AvatarPixmap.size().width()<5&&AvatarPixmap.size().height()<5)
-	{
-		QPixmapCache::clear();
-		AvatarPixmap.convertFromImage(QImage(":/pics/icons/At-Default-Avatar.png"));
-		ScaleHeight=ui.AvatarLabel->height();
-		ScaleWidth=AvatarPixmap.scaledToHeight(ScaleHeight).width();
-		if(ScaleWidth>ui.AvatarLabel->width())
-		{
-			ScaleWidth=ui.AvatarLabel->width();
-			ScaleHeight=AvatarPixmap.scaledToWidth(ScaleWidth).height();
-		}
-		AvatarPixmap=AvatarPixmap.scaled(ScaleWidth,ScaleHeight,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-		ui.AvatarLabel->setPixmap(AvatarPixmap);
-		return;
-	}
-	ui.AvatarLabel->setPixmap(AvatarPixmap);
-	ui.AvatarLabel->show();
 }
 void MainWindow::paintEvent(QPaintEvent * event)
 {
